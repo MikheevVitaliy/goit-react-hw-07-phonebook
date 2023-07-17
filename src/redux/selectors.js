@@ -1,4 +1,17 @@
-// получаем объект state из хранилища Redux и возвращаем свойство contacts, содержащее массив контактов.
-export const getContacts = state => state.contacts;
-// получаем объект state из хранилища Redux и возвращаем свойство filter, содержащее значение фильтра для поиска контактов.
-export const getFilters = state => state.filters;
+import { createSelector } from '@reduxjs/toolkit';
+
+export const selectContacts = state => state.contacts.items;
+
+export const selectIsLoading = state => state.contacts.isLoading;
+
+export const selectError = state => state.contacts.error;
+
+export const selectFilters = state => state.filters;
+
+export const selectVisibleContact = createSelector(
+  [selectContacts, selectFilters],
+  (contacts, filter) =>
+    contacts.filter(contact =>
+      contact.name.toLowerCase().includes(filter.toLowerCase())
+    )
+);

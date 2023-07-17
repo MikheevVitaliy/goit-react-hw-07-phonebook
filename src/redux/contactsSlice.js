@@ -1,40 +1,38 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { createSlice, isAnyOf } from '@reduxjs/toolkit';
+import { fetchContacts, addContact, deleteContact } from './operations';
 
-// Создание Redux slice (части состояния) с именем "contactsSlice"
+const extraActions = [fetchContacts, addContact, deleteContact];
+const getActions = type => isAnyOf(...extraActions.map(action => action[type]));
+
+const handlePending = state => {
+  state.isLoading = true;
+};
+
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+};
+
 const contactsSlice = createSlice({
-  name: 'contacts', // Уникальное имя slice
-  initialState: [],
-  reducers: {
-    // Обработчик (reducer) для добавления нового контакта в состояние store.
-    addContact: {
-      reducer(state, action) {
-        const duplicateName = state.find(
-          ({ name }) => name.toLowerCase() === action.payload.name.toLowerCase()
-        );
-
-        return duplicateName
-          ? alert(`${action.payload.name} is already in contacts.`)
-          : [...state, action.payload];
-      },
-      // Функция для подготовки данных перед вызовом reducer.
-      // Генерирует уникальный идентификатор с помощью nanoid() 4 числа, и возвращает объект с id, name и number, который станет частью payload для addContact.
-      prepare({ name, number }) {
-        return {
-          payload: {
-            id: nanoid(4),
-            name,
-            number,
-          },
-        };
-      },
-    },
-    // Обработчик (reducer) для удаления контакта из состояния store.
-    deleteContact(state, action) {
-      return state.filter(contact => contact.id !== action.payload);
-    },
-  },
+  name: 'contacts',
+  initialState: { items: [], isLoading: false, error: null },
+  extraReducers: builder =>
+    builder
+      .addCase(fetchContacts.fulfilled, (state, { payload }) => {
+        state.items = payload;
+      })
+      .addCase(addContact.fulfilled, (state, { payload }) => {
+        state.items.push(payload);
+      })
+      .addCase(deleteContact.fulfilled, (state, { payload }) => {
+        state.items = state.items.filter(contact => contact.id !== payload.id);
+      })
+      .addMatcher(getActions('pending'), handlePending)
+      .addMatcher(getActions('rejected'), handleRejected)
+      .addMatcher(getActions('fulfilled'), state => {
+        state.isLoading = false;
+        state.error = null;
+      }),
 });
 
-// Экспортируем действия (actions), которые могут быть вызваны в других частях приложения, для добавления и удаления контактов. Действия генерируются автоматически на основе reducers, указанных в createSlice().
-export const { addContact, deleteContact } = contactsSlice.actions;
 export const contactsReducer = contactsSlice.reducer;

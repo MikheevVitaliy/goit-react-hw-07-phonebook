@@ -1,14 +1,14 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { filteredContact } from 'redux/filtersSlice';
 import { Label, P } from './Filter.styled';
-import { getFilters } from 'redux/selectors';
+import { selectFilters } from 'redux/selectors';
 
 export const Filter = () => {
-  const filter = useSelector(getFilters);
+  const filter = useSelector(selectFilters);
   const dispatch = useDispatch();
 
   const changeFilter = ({ target: { value } }) => {
-    dispatch(filteredContact(value.trim()));
+    dispatch(filteredContact(value));
   };
 
   return (
